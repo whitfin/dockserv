@@ -28,7 +28,7 @@
   },
   "devDependencies": {},
   "bin": {
-    "dserv": "bin/dockserv",
-    "dockserv": "bin/dockserv"
+    "dserv": "bin/dserv",
+    "dockserv": "bin/dserv"
   }
 }
