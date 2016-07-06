@@ -1,0 +1,155 @@
+#!/usr/bin/env node
+const fs      = require('fs');
+const path    = require('path');
+const program = require('commander');
+
+const _package = require('../package.json');
+const config   = require('../lib/config');
+const dockserv = require('../lib/dockserv');
+const services = require('../lib/service');
+
+/*
+  Command Line Interface.
+ */
+
+var invoked = false;
+
+program
+  .version(_package.version);
+
+program
+  .command('config')
+  .description('Returns the current configuration')
+  .action(invoke(function () {
+    config.getConfig(function (err, config) {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+
+      console.info(JSON.stringify(config, null, 2));
+      process.exit(0);
+    });
+  }));
+
+program
+  .command('reset')
+  .description('Resets configuration to the default')
+  .action(invoke(function () {
+    config.reset(function () {
+      console.info('Configuration reset.');
+      process.exit(0);
+    });
+  }));
+
+program
+  .command('set [key] [value]')
+  .description('Sets a key/value pair inside the configuration')
+  .action(invoke(function (key, value) {
+    config.set(key, value, function (err) {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+
+      console.info('Key `' + key + '` set to `' + value + '`.');
+
+      process.exit(0);
+    });
+  }));
+
+program
+  .command('add [service] [definition]')
+  .description('Adds a new docker service')
+  .action(invoke(function (service, definition) {
+    var serv = services.get(service);
+
+    if (serv) {
+      console.error('Service already exists!');
+      process.exit(1);
+    }
+
+    var options = {};
+
+    if (/^https?:\/\//.test(definition)) {
+      options.url = definition;
+    } else {
+      options.definition = path.resolve(definition);
+    }
+
+    dockserv.add(service, options, function (err) {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+
+      console.info('Added definition for `' + service + '`.');
+      process.exit(0);
+    });
+  }));
+
+program
+  .command('start [service]')
+  .description('Starts a docker service')
+  .option('-v, --version [version]', 'A version override to start', 'latest')
+  .action(action('start'));
+
+program
+  .command('stop [service]')
+  .description('Stops a docker service')
+  .action(action('stop'));
+
+program
+  .command('restart [service]')
+  .description('Restarts a docker service')
+  .action(action('restart'));
+
+program
+  .parse(process.argv);
+
+if (!invoked) {
+  program
+    .help();
+}
+
+/*
+  Internals.
+ */
+
+function action(action) {
+  return invoke(doAction.bind(doAction, action));
+}
+
+function doAction(action, service, options) {
+  ensureService(service, function (service) {
+    dockserv[action](service, options || {}, handleResult);
+  });
+}
+
+function ensureService(service, cb) {
+  var serv = services.get(service);
+
+  if (!serv) {
+    console.error('Invalid service name provided!');
+    process.exit(1);
+  }
+
+  serv.name = service;
+
+  cb(serv);
+}
+
+function handleResult(err) {
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+  process.exit();
+}
+
+function invoke(fn) {
+  return function () {
+    invoked = true;
+    fn.apply(fn, Array.from(arguments));
+  };
+}

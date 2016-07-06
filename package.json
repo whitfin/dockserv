@@ -1,0 +1,33 @@
+{
+  "name": "dockserv",
+  "version": "0.1.0",
+  "description": "Simplified service manager using Docker containers",
+  "author": {
+    "name": "Isaac Whitfield",
+    "email": "iwhitfield@axway.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/zackehh/dockserv.git"
+  },
+  "bugs": {
+    "email": "iwhitfield@axway.com",
+    "url": "http://github.com/zackehh/dockserv/issues"
+  },
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "keywords": [],
+  "scripts": {
+    "prepublish": "bin/dockserv reset > /dev/null",
+  },
+  "dependencies": {
+    "commander": "2.9.0",
+    "dockerode": "2.2.10",
+    "dot-notes": "3.1.1"
+  },
+  "devDependencies": {},
+  "bin": {
+    "dserv": "bin/dockserv",
+    "dockserv": "bin/dockserv"
+  }
+}
