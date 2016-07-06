@@ -23,12 +23,9 @@ program
   .action(invoke(function () {
     config.getConfig(function (err, config) {
       if (err) {
-        console.error(err);
-        process.exit(1);
+        exit(1, err);
       }
-
-      console.info(JSON.stringify(config, null, 2));
-      process.exit(0);
+      exit(0, JSON.stringify(config, null, 2));
     });
   }));
 
@@ -37,8 +34,7 @@ program
   .description('Resets configuration to the default')
   .action(invoke(function () {
     config.reset(function () {
-      console.info('Configuration reset.');
-      process.exit(0);
+      exit(0, 'Configuration reset.');
     });
   }));
 
@@ -46,15 +42,15 @@ program
   .command('set [key] [value]')
   .description('Sets a key/value pair inside the configuration')
   .action(invoke(function (key, value) {
+    if (!key || !value) {
+      exit(1, 'Key and value are required!');
+    }
+
     config.set(key, value, function (err) {
       if (err) {
-        console.error(err);
-        process.exit(1);
+        exit(1, err);
       }
-
-      console.info('Key `' + key + '` set to `' + value + '`.');
-
-      process.exit(0);
+      exit(0, 'Key `' + key + '` set to `' + value + '`.');
     });
   }));
 
@@ -62,11 +58,14 @@ program
   .command('add [service] [definition]')
   .description('Adds a new docker service')
   .action(invoke(function (service, definition) {
+    if (!service || !definition) {
+      exit(1, 'Service name and definition are required!');
+    }
+
     var serv = services.get(service);
 
     if (serv) {
-      console.error('Service already exists!');
-      process.exit(1);
+      exit(1, 'Service already exists!');
     }
 
     var options = {};
@@ -79,19 +78,16 @@ program
 
     dockserv.add(service, options, function (err) {
       if (err) {
-        console.error(err);
-        process.exit(1);
+        exit(1, err);
       }
-
-      console.info('Added definition for `' + service + '`.');
-      process.exit(0);
+      exit(0, 'Added definition for `' + service + '`.');
     });
   }));
 
 program
   .command('start [service]')
   .description('Starts a docker service')
-  .option('-v, --version [version]', 'A version override to start', 'latest')
+  .option('-v, --version [version]', 'Specify a version of the image to work with', 'latest')
   .action(action('start'));
 
 program
@@ -127,16 +123,24 @@ function doAction(action, service, options) {
 }
 
 function ensureService(service, cb) {
+  if (!service) {
+    exit(1, 'Invalid service name provided!');
+  }
+
   var serv = services.get(service);
 
   if (!serv) {
-    console.error('Invalid service name provided!');
-    process.exit(1);
+    exit(1, 'Invalid service name provided!');
   }
 
   serv.name = service;
 
   cb(serv);
+}
+
+function exit(code, msg) {
+  console[code === 0 ? 'info' : 'error'](msg);
+  process.exit(code);
 }
 
 function handleResult(err) {

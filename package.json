@@ -16,9 +16,10 @@
   },
   "license": "MIT",
   "readmeFilename": "README.md",
+  "preferGlobal": true,
   "keywords": [],
   "scripts": {
-    "prepublish": "bin/dockserv reset > /dev/null",
+    "prepublish": "bin/dockserv reset > /dev/null"
   },
   "dependencies": {
     "commander": "2.9.0",
