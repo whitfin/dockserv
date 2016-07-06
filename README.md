@@ -48,7 +48,7 @@ $ dserv restart mongodb
 You can also load definitions from a URL, for example:
 
 ```bash
-$ dserv add mongodb https://gist.github.com/zackehh/f078940d29bf3f5fe8e4c5a568d06c48/raw/mongodb.js
+$ dserv add mongodb https://gist.githubusercontent.com/zackehh/f078940d29bf3f5fe8e4c5a568d06c48/raw/mongodb.js
 ```
 
 ### Commands
